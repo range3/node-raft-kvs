@@ -1,0 +1,11 @@
+{
+  "name": "@raft-kvs/backpack-config",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "find-yarn-workspace-root": "^1.2.1",
+    "webpack-node-externals": "^1.7.2"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@raft-kvs/dev",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "backpack dev"
+  },
+  "dependencies": {
+    "lodash.once": "^4.1.1",
+    "server-destroy": "^1.0.1"
+  },
+  "devDependencies": {
+    "backpack-core": "^0.8.4"
+  }
+}
