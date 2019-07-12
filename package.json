@@ -11,9 +11,13 @@
     "lint": "eslint --ignore-path .gitignore .",
     "test": "wsrun test"
   },
+  "pre-commit": [
+    "lint"
+  ],
   "devDependencies": {
     "@range3/eslint-config": "^2.0.0",
     "eslint": "^6.0.1",
+    "pre-commit": "^1.2.2",
     "wsrun": "^5.0.0"
   },
   "workspaces": [

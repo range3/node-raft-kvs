@@ -1,0 +1,11 @@
+{
+  "name": "@raft-kvs/client-raft",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "superagent": "^5.1.0",
+    "url-join": "^4.0.1"
+  }
+}
