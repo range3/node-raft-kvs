@@ -8,16 +8,24 @@
 // 延期されていなければ、callbackを呼び、終了する
 
 class Timer {
-  constructor (ms, cb) {
+  constructor () {
     this.extended = false
+    this.cb = null
+  }
+
+  start (ms, cb) {
+    if (this.cb) {
+      throw new Error('Timer is already started')
+    }
     this.due = Date.now() + ms
     this.cb = cb
+    this.extended = false
     setTimeout(() => {
       this.handleTimeout()
     }, ms)
   }
 
-  restart (ms) {
+  extend (ms) {
     // timer lock start
     this.due = Date.now() + ms
     this.extended = true

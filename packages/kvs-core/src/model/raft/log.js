@@ -36,14 +36,14 @@ class Log {
   }
 
   trim (start) {
-    if (start >= this.log.payload.length) {
+    if (start >= this.payload.length) {
       return
     }
     this.payload = this.payload.slice(0, start)
   }
 
-  push (entry) {
-    this.payload.push(entry)
+  concat (entries) {
+    this.payload = this.payload.concat(entries)
   }
 }
 

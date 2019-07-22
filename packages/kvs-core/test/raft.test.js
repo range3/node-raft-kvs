@@ -51,4 +51,29 @@ describe('Raft', () => {
       assert.strictEqual(raft.role, Raft.ROLE.CANDIDATE)
     })
   })
+
+  describe('#appendEntries', () => {
+    it('should append given entries', () => {
+      assert.deepEqual(
+        raft.appendEntries(
+          0, 'S2', 0, 0, [{ term: 0, command: 'c1' }, { term: 0, command: 'c2' }], 0),
+        {
+          term: 0,
+          success: true,
+          matchIndex: 2,
+        })
+
+      // should be idempotent
+      assert.deepEqual(
+        raft.appendEntries(
+          0, 'S2', 0, 0, [{ term: 0, command: 'c1' }, { term: 0, command: 'c2' }], 0),
+        {
+          term: 0,
+          success: true,
+          matchIndex: 2,
+        })
+
+      console.log(require('util').inspect(raft, { depth: null }))
+    })
+  })
 })

@@ -4,6 +4,8 @@ const { EventEmitter } = require('events')
 const Log = require('./log')
 const util = require('./util')
 
+const ELECTION_TIMEOUT_MIN_MSEC = 150
+
 class Raft extends EventEmitter {
   static get ROLE () {
     return {
@@ -54,12 +56,16 @@ class Raft extends EventEmitter {
       .reduce((acc, peerId) => (this.voteGranted[peerId] ? acc + 1 : acc), 0)
   }
 
+  generateElectionTimeout () {
+    return (Math.random() + 1) * ELECTION_TIMEOUT_MIN_MSEC
+  }
+
   stepDown (term) {
     this.currentTerm = term
     this.role = Raft.ROLE.FOLLOWER
     this.votedFor = null
 
-    // TODO: electionTimeout timer start
+    this.emit('timer:extendElectionTimeout', this.generateElectionTimeout())
   }
 
   startElection () {
@@ -94,7 +100,7 @@ class Raft extends EventEmitter {
     if (this.votedFor === null || this.votedFor === candidateId) {
       if (this.log.lessEqualThan(lastLogIndex, lastLogTerm)) {
         this.votedFor = candidateId
-        this.emit('timer:extendElectionTimeout', 100) // FIXME: generate random
+        this.emit('timer:extendElectionTimeout', this.generateElectionTimeout())
         return {
           term: this.currentTerm,
           voteGranted: true,
@@ -115,7 +121,7 @@ class Raft extends EventEmitter {
     }
 
     if (this.role === Raft.ROLE.CANDIDATE &&
-      this.currentTerm == term) {
+      this.currentTerm === term) {
       this.voteGranted[voterId] = voteGranted
 
       if (this.countVoteGranted() >= this.majorityThreshold) {
@@ -131,24 +137,25 @@ class Raft extends EventEmitter {
     if (this.currentTerm < term) {
       this.stepDown(term)
     }
-    
-    if(this.currentTerm === term) {
+
+    if (this.currentTerm === term) {
       this.leaderId = leaderId
       this.role = Raft.ROLE.FOLLOWER
-      // TODO: election timer extends
+      this.emit('timer:extendElectionTimeout', this.generateElectionTimeout())
 
       if (this.log.contain(prevLogIndex, prevLogTerm)) {
-
-        let index = prevLogIndex
+        let index = prevLogIndex + 1
         for (let entry of entries) {
-          index += 1
-          if(!this.log.contain(index, entri.term)) {
+          if (!this.log.contain(index, entry.term)) {
             this.log.trim(index)
-            this.log.push(entry) // 1つずつ渡すのではなく、まとめて渡したほうが性能よさそう
+            break
           }
+          index += 1
         }
+        const skip = index - (prevLogIndex + 1)
+        this.log.concat(entries.slice(skip))
 
-        matchIndex = index
+        matchIndex = this.log.lastIndex
         success = true
         this.commitIndex = Math.max(this.commitIndex, leaderCommit)
       }
