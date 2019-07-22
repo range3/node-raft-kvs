@@ -167,6 +167,23 @@ class Raft extends EventEmitter {
       matchIndex,
     }
   }
+
+  appendEntriesReply (term, followerId, success, matchIndex) {
+    if (this.currentTerm < term) {
+      this.stepDown(term)
+    }
+
+    if (this.role === Raft.ROLE.LEADER &&
+        this.currentTerm === term) {
+      if (success) {
+        this.matchIndex[followerId] = Math.max(
+          this.matchIndex[followerId], matchIndex)
+        this.nextIndex[followerId] = matchIndex + 1
+      } else {
+        this.nextIndex[followerId] = Math.max(1, this.nextIndex[followerId] - 1)
+      }
+    }
+  }
 }
 
 module.exports = Raft

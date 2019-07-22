@@ -3,47 +3,85 @@
 // (Node.jsはシングルスレッドなので関係ないが)
 // multi threadなIO loopにおいて、deadline extendableなtimerが欲しい
 // timerをキャンセルしようとした時、他のスレッドによってtimer handlerが既に起きている可能性がある
-// なので、キャンセルするのは諦めて、timer handlerは必ず1度呼び出されるのを前提とし、
-// timer handlerが呼ばれたら、deadlineの延期をチェックし、されていればタイマーを再セットする。
-// 延期されていなければ、callbackを呼び、終了する
+// なので、タイマーのキャンセル処理と、deadlineのreschedule処理は、lazyに、
+// 次回タイマーハンドラが起きたときに処理する
+
+const STATE = {
+  STOPPED: 2,
+  STARTED: 3,
+  RESCHEDULED: 4,
+  STOPPING: 5,
+}
 
 class Timer {
-  constructor () {
-    this.extended = false
-    this.cb = null
+  static get STATE () {
+    return STATE
+  }
+
+  constructor (cb) {
+    this.state = Timer.STATE.STOPPED
+    this.cb = cb
   }
 
   start (ms, cb) {
-    if (this.cb) {
-      throw new Error('Timer is already started')
-    }
-    this.due = Date.now() + ms
     this.cb = cb
-    this.extended = false
-    setTimeout(() => {
-      this.handleTimeout()
-    }, ms)
+    this.restart(ms)
+  }
+
+  restart (ms) {
+    switch (this.state) {
+      case Timer.STATE.STOPPED:
+        this.state = Timer.STATE.STARTED
+        setTimeout(() => {
+          this.handleTimeout()
+        }, ms)
+        break
+      case Timer.STATE.STARTED:
+      case Timer.STATE.RESCHEDULED:
+      case Timer.STATE.STOPPING:
+        this.state = Timer.STATE.RESCHEDULED
+        this.due = Date.now() + ms
+        break
+    }
   }
 
   extend (ms) {
-    // timer lock start
-    this.due = Date.now() + ms
-    this.extended = true
-    // timer lock end
+    this.restart(ms)
+  }
+
+  stop () {
+    switch (this.state) {
+      case Timer.STATE.STARTED:
+      case Timer.STATE.RESCHEDULED:
+        this.state = Timer.STATE.STOPPING
+        break
+    }
   }
 
   handleTimeout () {
     // timer lock start
-    const now = Date.now()
-    if (this.extended && this.due > now) {
-      this.extended = false
-      setTimeout(() => {
-        this.handleTimeout()
-      }, this.due - now)
-      // timer lock end
-    } else {
-      // timer lock end
-      this.cb()
+    switch (this.state) {
+      case Timer.STATE.STARTED:
+        this.state = Timer.STATE.STOPPED
+        // timer lock end
+        this.cb()
+        break
+      case Timer.STATE.RESCHEDULED:
+        const now = Date.now()
+        if (this.due > now) {
+          this.state = Timer.STATE.STARTED
+          const ms = this.due - now
+          // timer lock end
+          setTimeout(() => {
+            this.handleTimeout()
+          }, ms)
+        }
+        break
+      case Timer.STATE.STOPPING:
+        this.state = Timer.STATE.STOPPED
+        break
+      default:
+        throw new Error(`invalid timer state: ${this.state}`)
     }
   }
 }
