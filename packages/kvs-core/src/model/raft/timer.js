@@ -8,8 +8,7 @@
 
 const STATE = {
   STOPPED: 2,
-  STARTED: 3,
-  RESCHEDULED: 4,
+  SCHEDULED: 4,
   STOPPING: 5,
 }
 
@@ -25,34 +24,29 @@ class Timer {
 
   start (ms, cb) {
     this.cb = cb
-    this.restart(ms)
+    this.schedule(ms)
   }
 
-  restart (ms) {
+  schedule (ms) {
     switch (this.state) {
       case Timer.STATE.STOPPED:
-        this.state = Timer.STATE.STARTED
+        this.state = Timer.STATE.SCHEDULED
+        this.due = Date.now() + ms
         setTimeout(() => {
           this.handleTimeout()
         }, ms)
         break
-      case Timer.STATE.STARTED:
-      case Timer.STATE.RESCHEDULED:
+      case Timer.STATE.SCHEDULED:
       case Timer.STATE.STOPPING:
-        this.state = Timer.STATE.RESCHEDULED
+        this.state = Timer.STATE.SCHEDULED
         this.due = Date.now() + ms
         break
     }
   }
 
-  extend (ms) {
-    this.restart(ms)
-  }
-
   stop () {
     switch (this.state) {
-      case Timer.STATE.STARTED:
-      case Timer.STATE.RESCHEDULED:
+      case Timer.STATE.SCHEDULED:
         this.state = Timer.STATE.STOPPING
         break
     }
@@ -61,20 +55,15 @@ class Timer {
   handleTimeout () {
     // timer lock start
     switch (this.state) {
-      case Timer.STATE.STARTED:
-        this.state = Timer.STATE.STOPPED
-        // timer lock end
-        this.cb()
-        break
-      case Timer.STATE.RESCHEDULED:
+      case Timer.STATE.SCHEDULED:
         const now = Date.now()
         if (this.due > now) {
-          this.state = Timer.STATE.STARTED
-          const ms = this.due - now
-          // timer lock end
           setTimeout(() => {
             this.handleTimeout()
-          }, ms)
+          }, this.due - now)
+        } else {
+          this.state = Timer.STATE.STOPPED
+          this.cb()
         }
         break
       case Timer.STATE.STOPPING:

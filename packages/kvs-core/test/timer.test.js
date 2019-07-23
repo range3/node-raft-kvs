@@ -25,7 +25,7 @@ describe('Timer', () => {
 
     await new Promise(resolve => setTimeout(resolve, 1))
 
-    timer.extend(500)
+    timer.schedule(500)
 
     await start
   })
