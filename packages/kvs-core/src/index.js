@@ -11,7 +11,7 @@ class KvsCore {
       return acc
     }, {})
 
-    this.raft = new Raft(id, raftClients)
+    this.raft = new Raft(id, servers.map(svr => svr.id))
     this.app = app(this)
   }
 

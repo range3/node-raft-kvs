@@ -15,9 +15,9 @@ describe('Raft', () => {
     })
   })
 
-  describe('#majorityThreshold', () => {
+  describe('#quorum', () => {
     it('should be the num of majority of peers', () => {
-      assert.strictEqual(raft.majorityThreshold, 3)
+      assert.strictEqual(raft.quorum, 3)
     })
   })
 

@@ -47,7 +47,7 @@ class Raft extends EventEmitter {
     return this.peerIds.length + 1
   }
 
-  get majorityThreshold () {
+  get quorum () {
     return Math.floor(this.numOfPeers / 2) + 1
   }
 
@@ -124,7 +124,7 @@ class Raft extends EventEmitter {
       this.currentTerm === term) {
       this.voteGranted[voterId] = voteGranted
 
-      if (this.countVoteGranted() >= this.majorityThreshold) {
+      if (this.countVoteGranted() >= this.quorum) {
         this.role = Raft.ROLE.LEADER
       }
     }

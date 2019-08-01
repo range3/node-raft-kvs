@@ -7,7 +7,7 @@ const config = require('../config')
 
 ;(async () => {
   await Promise.all(config.servers.map(async (server) => {
-    const kvsCore = new KvsCore(server.id, config.servers.map(svr => svr.id))
+    const kvsCore = new KvsCore(server.id, config.servers)
 
     const kvsServer = await kvsCore.listen(server.port, server.host)
     enableDestroy(kvsServer)
