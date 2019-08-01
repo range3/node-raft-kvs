@@ -115,7 +115,7 @@ class Raft extends EventEmitter {
   }
 
   requestVoteReply (term, voterId, voteGranted) {
-    if (term > this.currentTerm) {
+    if (this.currentTerm < term) {
       this.stepDown(term)
       return
     }
@@ -147,13 +147,13 @@ class Raft extends EventEmitter {
         let index = prevLogIndex + 1
         for (let entry of entries) {
           if (!this.log.contain(index, entry.term)) {
-            this.log.trim(index)
+            this.log.truncateSuffix(index)
             break
           }
           index += 1
         }
         const skip = index - (prevLogIndex + 1)
-        this.log.concat(entries.slice(skip))
+        this.log.append(entries.slice(skip))
 
         matchIndex = this.log.lastIndex
         success = true

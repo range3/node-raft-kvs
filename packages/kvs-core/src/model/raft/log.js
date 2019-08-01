@@ -2,7 +2,8 @@
 
 class Log {
   constructor () {
-    this.payload = [{ term: 0, command: null }] // [sentinel, {term: number, command: object},...]
+    // [sentinel, {term: number, command: object},...]
+    this.payload = [{ term: 0, command: null }]
   }
 
   get lastIndex () {
@@ -35,14 +36,14 @@ class Log {
     return index < this.payload.length && this.payload[index].term === term
   }
 
-  trim (start) {
-    if (start >= this.payload.length) {
+  truncateSuffix (firstIndexRemoved) {
+    if (firstIndexRemoved >= this.payload.length) {
       return
     }
-    this.payload = this.payload.slice(0, start)
+    this.payload = this.payload.slice(0, firstIndexRemoved)
   }
 
-  concat (entries) {
+  append (entries) {
     this.payload = this.payload.concat(entries)
   }
 }
