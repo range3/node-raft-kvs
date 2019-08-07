@@ -1,0 +1,19 @@
+{
+  "name": "@raft-kvs/cli",
+  "version": "1.0.0",
+  "bin": {
+    "raftKvs": "build/main.js"
+  },
+  "author": "range3",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "backpack build && chmod +x build/main.js"
+  },
+  "dependencies": {
+    "commander": "^2.20.0"
+  },
+  "devDependencies": {
+    "backpack-core": "^0.8.4"
+  }
+}
